@@ -20,7 +20,7 @@ case_num_dict = {
     'BSSP585cmip6': '3'
 }
 
-# Dictionary for variables & their names in the metrics file
+# Dictionary for variables & their names used for saving models etc
 met_var_dict = {
     'URBAN_AC_kJ': 'AC',
     'URBAN_HEAT_kJ': 'HEAT',
@@ -127,16 +127,16 @@ def create_model(learning_rate, l1, l2, output_activation=None):
                  )
     return model
 
-def evaluate_performance(y, y_pred, lat, lon, verbose=True):
+def evaluate_performance(y, y_pred, verbose=True):
     '''
-    Calculate the r^2 and RMSE of the prediction.
+    Calculate the r^2 and RMSE of the predictions.
     '''
     rsq = r2_score(y, y_pred)
     rmse = mean_squared_error(y, y_pred, squared=False)
     if verbose:
         print('r^2\tRMSE\t')
         print(f'{round(rsq, 3)}\t{round(rmse, 3)}\t')
-    return rsq, rmse, rsq_xgb, rmse_xgb
+    return rsq, rmse
 
 
 # Functions for applying trained NN to other CMIP6 models
@@ -160,7 +160,7 @@ def prepare_input_apply(df, features, to_standardize=True, mean_x_num = None, st
         x = input_df[features[:-1]+[i for i in input_df.columns if 'month' in i]].values
         return x
 
-def apply(var, ds, features, targets, train_dss, test_ds, pred_da, met, savemodel_dir, testpred_path, start=0):
+def apply(var, ds, features, targets, train_dss, test_ds, pred_da, gridcells, savemodel_dir, testpred_path, start=0):
     '''
     For applying the saved NN models on another CMIP model, where no ground truths are available.
     -------
@@ -168,14 +168,14 @@ def apply(var, ds, features, targets, train_dss, test_ds, pred_da, met, savemode
     features: variables that NN uses to make predictions (note: CESM features are hard-coded in)
     targets: the target variable in the form of a sequence (list)
     pred_da: an empty dataset for storing the predicted values
-    met: metrics from training, pandas DataFrame
+    gridcells: urban gridcells to apply the NN models to, a pandas DataFrame
     '''
     start_time = datetime.now()
     print(f'Applying models started at {start_time}.')
     print('Applying models on ', end='')
 
     features_ = ['WIND', 'QBOT', 'TBOT', 'FLDS', 'FSDS', 'PRCP', 'month']
-    for i, (lat, lon) in enumerate(met.index):
+    for i, (lat, lon) in enumerate(gridcells.index):
         i_ = i+start
 
         lat, lon = np.float32(lat), np.float32(lon)

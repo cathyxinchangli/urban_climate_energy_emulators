@@ -2,10 +2,6 @@ import importlib
 import UrbanEnergyEmulator.NNfuncs
 importlib.reload(UrbanEnergyEmulator.NNfuncs)
 from UrbanEnergyEmulator.NNfuncs import *
-# import matplotlib
-# matplotlib.use('pdf')
-# import matplotlib.pyplot as plt
-
 import os
 
 ######################## CHANGE THIS SECTION ###########################
@@ -60,11 +56,10 @@ for mem in members:
 URBAN_ENERGY_101, URBAN_ENERGY_102, URBAN_ENERGY_103 = ds_list
 del ds_list
 
-# Metrics file from training
-metpath = f'.../CASE{case_id}/{var}_kJ_XGB_metrics_TEST_{test_mem}_CASE{case_id}.csv'
-met = pd.read_csv(metpath).set_index(['lat', 'lon'])
+# Load csv of urban grid cells
+gridcells = pd.read_csv(f'{cesm2_file_path}/urban_gridcells.csv').set_index(['lat', 'lon'])
 
-# Apply NN to each model:
+# Apply NN to each ESM:
 print('################################################ APPLY ################################################')
 for esm in models:
     print(f'************************ Open file for {esm} ***************************')
@@ -96,7 +91,7 @@ for esm in models:
     print(f'Predicted {var} for {esm} {scenario} will be saved at:\n\t', testpred_path)
     
     print(f'************************ NN emulators: Apply {esm} ***************************')
-    pred_da = apply(var, ds, features, targets, pred_da, met, savemodel_dir, testpred_path)
+    pred_da = apply(var, ds, features, targets, pred_da, gridcells, savemodel_dir, testpred_path)
     
     print('')
 
